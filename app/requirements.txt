@@ -1,3 +1,6 @@
 gunicorn
 psycopg2-binary
 django
+
+django-vite==3.0.5
+django-cors-headers==4.6.0

@@ -7,6 +7,7 @@ services:
     working_dir: /usr/src/app/
     volumes:
       - ./app:/usr/src/app
+      - ./frontend:/usr/src/app/frontend
       - static_volume:/usr/src/app/staticfiles
       - media_volume:/usr/src/app/mediafiles
     expose:

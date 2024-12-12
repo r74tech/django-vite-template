@@ -55,12 +55,18 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "django_vite",
+    'corsheaders',
 ]
 
 LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = LOCAL_APPS + DJANGO_APPS + THIRD_PARTY_APPS
+
+THIRD_PARTY_MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -70,7 +76,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
+] + THIRD_PARTY_MIDDLEWARE
 
 ROOT_URLCONF = 'app.urls'
 
@@ -83,10 +89,11 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
+                # 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'app.context_processors.is_debug',
             ],
         },
     },
@@ -158,3 +165,21 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# 開発環境の場合、この値は参照されないので設定不要
+# ただ、キーや中身がないと以下のエラーになるため、中身は適当な値を設定しておく
+# AttributeError: 'Settings' object has no attribute 'DJANGO_VITE_ASSETS_PATH'
+DJANGO_VITE_ASSETS_PATH = BASE_DIR
+
+# HMRするためDebugと同じにしておく
+DJANGO_VITE_DEV_MODE = DEBUG
+
+# Vite.jsがv3系からポートが変更になったので対応
+DJANGO_VITE_DEV_SERVER_PORT = 5173
+
+# for django-cors-headers
+CORS_ALLOWED_ORIGINS = (
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+)
