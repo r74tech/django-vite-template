@@ -151,26 +151,11 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = '/staticfiles/'
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-
-# media
-MEDIA_URL = "/mediafiles/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
 # 開発環境の場合、この値は参照されないので設定不要
 # ただ、キーや中身がないと以下のエラーになるため、中身は適当な値を設定しておく
 # AttributeError: 'Settings' object has no attribute 'DJANGO_VITE_ASSETS_PATH'
-DJANGO_VITE_ASSETS_PATH = BASE_DIR
+DJANGO_VITE_ASSETS_PATH = BASE_DIR / 'frontend' / 'dist'
+DJANGO_VITE_MANIFEST_PATH = DJANGO_VITE_ASSETS_PATH / '.vite' / 'manifest.json'
 
 # HMRするためDebugと同じにしておく
 DJANGO_VITE_DEV_MODE = DEBUG
@@ -183,3 +168,49 @@ CORS_ALLOWED_ORIGINS = (
     'http://localhost:5173',
     'http://127.0.0.1:5173',
 )
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+
+STATIC_URL = '/staticfiles/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "frontend", "dist"),
+    os.path.join(BASE_DIR, "frontend", "dist", ".vite"),
+]
+
+# media
+MEDIA_URL = "/mediafiles/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "mediafiles")
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# for logging purposes
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'error.log'),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
+
+LOGGING['loggers']['django']['level'] = 'DEBUG'
