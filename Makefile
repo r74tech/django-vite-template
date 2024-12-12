@@ -85,3 +85,67 @@ help: ## Show this help message
 	@echo ''
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+
+# Release Commands
+.PHONY: release release-patch release-minor release-major deploy deploy-staging deploy-production
+
+VERSION_FILE := VERSION
+CURRENT_VERSION := $(shell cat $(VERSION_FILE) 2>/dev/null || echo "0.0.0")
+
+release-patch: ## Increment patch version (0.0.X)
+	@echo "Current version: $(CURRENT_VERSION)"
+	@echo "$(CURRENT_VERSION)" | awk -F. '{$$NF = $$NF + 1;} 1' | sed 's/ /./g' > $(VERSION_FILE)
+	@echo "New version: $$(cat $(VERSION_FILE))"
+	@make _tag
+
+release-minor: ## Increment minor version (0.X.0)
+	@echo "Current version: $(CURRENT_VERSION)"
+	@echo "$(CURRENT_VERSION)" | awk -F. '{$$2 = $$2 + 1;$$NF = 0;} 1' | sed 's/ /./g' > $(VERSION_FILE)
+	@echo "New version: $$(cat $(VERSION_FILE))"
+	@make _tag
+
+release-major: ## Increment major version (X.0.0)
+	@echo "Current version: $(CURRENT_VERSION)"
+	@echo "$(CURRENT_VERSION)" | awk -F. '{$$1 = $$1 + 1;$$2 = 0;$$NF = 0;} 1' | sed 's/ /./g' > $(VERSION_FILE)
+	@echo "New version: $$(cat $(VERSION_FILE))"
+	@make _tag
+
+_tag: ## Create and push git tag
+	git add $(VERSION_FILE)
+	git commit -m "Release version $$(cat $(VERSION_FILE))"
+	git tag -a "v$$(cat $(VERSION_FILE))" -m "Release version $$(cat $(VERSION_FILE))"
+	git push origin main
+	git push origin "v$$(cat $(VERSION_FILE))"
+
+# Deployment Commands
+deploy-staging: ## Deploy to staging environment
+	@echo "Deploying version $(CURRENT_VERSION) to staging..."
+	$(DOCKER_COMPOSE) -f compose.staging.yml up -d --build
+	$(MAKE) migrate
+	$(MAKE) collectstatic
+
+deploy-production: ## Deploy to production environment
+	@echo "Deploying version $(CURRENT_VERSION) to production..."
+	$(DOCKER_COMPOSE) -f compose.production.yml up -d --build
+	$(MAKE) migrate
+	$(MAKE) collectstatic
+
+# Quality Checks
+.PHONY: check test lint format
+
+check: lint test ## Run all checks
+
+test: ## Run tests
+	$(DOCKER_RUN) $(APP_SERVICE) python manage.py test
+
+lint: ## Run linting
+	$(DOCKER_RUN) $(APP_SERVICE) flake8 .
+	$(DOCKER_RUN) $(APP_SERVICE) black . --check
+	$(DOCKER_RUN) $(APP_SERVICE) isort . --check-only
+	cd frontend && pnpm lint
+
+format: ## Format code
+	$(DOCKER_RUN) $(APP_SERVICE) black .
+	$(DOCKER_RUN) $(APP_SERVICE) isort .
+	cd frontend && pnpm format
