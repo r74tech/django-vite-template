@@ -3,4 +3,4 @@ psycopg2-binary
 django
 
 django-vite==3.0.6
-django-cors-headers==4.6.0
+django-cors-headers==4.7.0
